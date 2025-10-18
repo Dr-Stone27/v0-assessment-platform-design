@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Brain, BarChart3, Target, Users } from "lucide-react"
+import { Brain, BarChart3, Target, Users, BookOpen } from "lucide-react"
 
 export default function HomePage() {
   return (
@@ -71,6 +71,23 @@ export default function HomePage() {
             <CardContent className="flex justify-center">
               <Button asChild size="lg" className="text-lg px-8">
                 <Link href="/assessment/demographics">Start Assessment</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 border-secondary/20 bg-secondary/5">
+            <CardHeader className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary/10 mb-2 mx-auto">
+                <BookOpen className="w-6 h-6 text-secondary" />
+              </div>
+              <CardTitle className="text-2xl">Learning Resources</CardTitle>
+              <CardDescription className="text-base">
+                Explore tools, techniques, and archetype breakdowns to support your learning journey.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              <Button asChild variant="outline" size="lg" className="text-lg px-8 bg-transparent">
+                <Link href="/resources">Browse Resources</Link>
               </Button>
             </CardContent>
           </Card>

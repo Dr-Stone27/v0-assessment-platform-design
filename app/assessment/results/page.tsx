@@ -12,8 +12,9 @@ import { RadarChart } from "@/components/radar-chart"
 import { MetricBar } from "@/components/metric-bar"
 import { PersonalizedReportComponent } from "@/components/report/personalized-report"
 import { METRIC_DESCRIPTIONS } from "@/lib/constants/metric-descriptions"
-import { Download, RotateCcw, Brain, TrendingUp, Target, Lightbulb, FileText } from "lucide-react"
+import { Download, RotateCcw, Brain, TrendingUp, Target, Lightbulb, FileText, BookOpen } from "lucide-react"
 import type { CompleteProfile, PersonalizedReport } from "@/lib/types"
+import Link from "next/link"
 
 export default function ResultsPage() {
   const router = useRouter()
@@ -338,6 +339,12 @@ export default function ResultsPage() {
             <Button variant="outline" size="lg" onClick={handleReset}>
               <RotateCcw className="mr-2 w-4 h-4" />
               Take Again
+            </Button>
+            <Button asChild size="lg" variant="secondary">
+              <Link href="/resources">
+                <BookOpen className="mr-2 w-4 h-4" />
+                Explore Resources
+              </Link>
             </Button>
             <Button size="lg" disabled>
               <Download className="mr-2 w-4 h-4" />
