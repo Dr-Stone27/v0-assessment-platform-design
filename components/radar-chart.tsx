@@ -17,7 +17,10 @@ export function RadarChart({ metrics, size = 400 }: RadarChartProps) {
   // Calculate mobile container dimensions
   const mobileViewportWidth = 320; // Typical mobile width for safe viewing
   const mobileViewportHeight = 320; // Square container for mobile
-  const mobileScale = Math.min(mobileViewportWidth / size, mobileViewportHeight / size);
+  const mobileScale = Math.min(
+    mobileViewportWidth / size,
+    mobileViewportHeight / size
+  );
 
   // Transform state for pan and zoom
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
@@ -25,7 +28,7 @@ export function RadarChart({ metrics, size = 400 }: RadarChartProps) {
 
   // Effect to update scale when mobile state changes
   const [isInitialized, setIsInitialized] = useState(false);
-  
+
   // Initialize transform with proper mobile scaling
   useEffect(() => {
     if (!isInitialized) {
@@ -165,11 +168,11 @@ export function RadarChart({ metrics, size = 400 }: RadarChartProps) {
         if (touchStateRef.current.lastTouchDistance > 0) {
           const scaleChange =
             currentDistance / touchStateRef.current.lastTouchDistance;
-          
+
           // Set scale bounds relative to initial mobile scale
           const minScale = isMobile ? mobileScale * 0.5 : 0.5;
           const maxScale = isMobile ? mobileScale * 3 : 3;
-          
+
           const newScale = Math.max(
             minScale,
             Math.min(
@@ -392,9 +395,9 @@ export function RadarChart({ metrics, size = 400 }: RadarChartProps) {
 
       {/* Reset button for mobile */}
       {isMobile &&
-        (transform.x !== 0 || 
-         transform.y !== 0 || 
-         transform.scale !== (isMobile ? mobileScale : 1)) && (
+        (transform.x !== 0 ||
+          transform.y !== 0 ||
+          transform.scale !== (isMobile ? mobileScale : 1)) && (
           <button
             onClick={resetTransform}
             className="absolute top-2 right-2 px-3 py-1 bg-primary text-primary-foreground text-xs rounded-md shadow-lg"
