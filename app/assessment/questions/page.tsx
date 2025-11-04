@@ -108,13 +108,13 @@ export default function QuestionsPage() {
                   </div>
 
                   {/* Scale Buttons */}
-                  <div className="flex justify-between gap-2">
+                  <div className="flex justify-between  overflow-auto py-2 gap-2">
                     {LIKERT_SCALE_VALUES.map((option) => (
                       <button
                         key={option.value}
                         onClick={() => handleSelect(option.value)}
                         className={cn(
-                          "flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all",
+                          "flex-1 flex shrink-0 flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all",
                           "hover:border-primary/50 hover:bg-primary/5",
                           selectedValue === option.value
                             ? "border-primary bg-primary/10 shadow-sm"
