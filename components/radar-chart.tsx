@@ -1,54 +1,14 @@
-"use client";
+"use client"
 
-import { useMemo, useRef, useState, useCallback, useEffect } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import type { MetricScore } from "@/lib/types";
+import { useMemo } from "react"
+import type { MetricScore } from "@/lib/types"
 
 interface RadarChartProps {
-  metrics: Record<string, MetricScore>;
-  size?: number;
+  metrics: Record<string, MetricScore>
+  size?: number
 }
 
 export function RadarChart({ metrics, size = 400 }: RadarChartProps) {
-  const isMobile = useIsMobile();
-  const svgRef = useRef<SVGSVGElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Calculate mobile container dimensions
-  const mobileViewportWidth = 320; // Typical mobile width for safe viewing
-  const mobileViewportHeight = 320; // Square container for mobile
-  const mobileScale = Math.min(
-    mobileViewportWidth / size,
-    mobileViewportHeight / size
-  );
-
-  // Transform state for pan and zoom
-  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
-  const [isGrabbing, setIsGrabbing] = useState(false);
-
-  // Effect to update scale when mobile state changes
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  // Initialize transform with proper mobile scaling
-  useEffect(() => {
-    if (!isInitialized) {
-      setTransform({
-        x: 0,
-        y: 0,
-        scale: isMobile ? mobileScale : 1,
-      });
-      setIsInitialized(true);
-    }
-  }, [isMobile, mobileScale, isInitialized]);
-
-  // Touch state for gesture handling
-  const touchStateRef = useRef({
-    lastTouchDistance: 0,
-    lastTouchCenter: { x: 0, y: 0 },
-    isDragging: false,
-    startTransform: { x: 0, y: 0, scale: 1 },
-  });
-
   const chartData = useMemo(() => {
     const dimensions = [
       { key: "self-regulation", label: "Self-Regulation", angle: 0 },
@@ -63,20 +23,20 @@ export function RadarChart({ metrics, size = 400 }: RadarChartProps) {
       { key: "retention", label: "Retention", angle: 270 },
       { key: "critical-thinking", label: "Critical Thinking", angle: 300 },
       { key: "well-being", label: "Well-being", angle: 330 },
-    ];
+    ]
 
-    const center = size / 2;
-    const maxRadius = (size / 2) * 0.7;
+    const center = size / 2
+    const maxRadius = (size / 2) * 0.7
 
     // Generate concentric circles for grid
     const circles = [20, 40, 60, 80, 100].map((percent) => ({
       radius: (maxRadius * percent) / 100,
       label: percent === 100 ? "+100" : percent === 0 ? "0" : "",
-    }));
+    }))
 
     // Generate axis lines
     const axes = dimensions.map((dim) => {
-      const angleRad = (dim.angle * Math.PI) / 180;
+      const angleRad = (dim.angle * Math.PI) / 180
       return {
         x1: center,
         y1: center,
@@ -85,335 +45,85 @@ export function RadarChart({ metrics, size = 400 }: RadarChartProps) {
         label: dim.label,
         labelX: center + (maxRadius + 30) * Math.cos(angleRad),
         labelY: center + (maxRadius + 30) * Math.sin(angleRad),
-      };
-    });
+      }
+    })
 
     // Generate data polygon points
     const dataPoints = dimensions.map((dim) => {
-      const score = metrics[dim.key]?.normalized || 0;
+      const score = metrics[dim.key]?.normalized || 0
       // Convert -100 to +100 scale to 0 to maxRadius
-      const normalizedScore = ((score + 100) / 200) * maxRadius;
-      const angleRad = (dim.angle * Math.PI) / 180;
+      const normalizedScore = ((score + 100) / 200) * maxRadius
+      const angleRad = (dim.angle * Math.PI) / 180
       return {
         x: center + normalizedScore * Math.cos(angleRad),
         y: center + normalizedScore * Math.sin(angleRad),
-      };
-    });
-
-    const polygonPoints = dataPoints.map((p) => `${p.x},${p.y}`).join(" ");
-
-    return { center, maxRadius, circles, axes, dataPoints, polygonPoints };
-  }, [metrics, size]);
-
-  // Helper function to get touch distance between two points
-  const getTouchDistance = useCallback((touches: React.TouchList) => {
-    if (touches.length < 2) return 0;
-    const touch1 = touches[0];
-    const touch2 = touches[1];
-    return Math.sqrt(
-      Math.pow(touch2.clientX - touch1.clientX, 2) +
-        Math.pow(touch2.clientY - touch1.clientY, 2)
-    );
-  }, []);
-
-  // Helper function to get center point between two touches
-  const getTouchCenter = useCallback((touches: React.TouchList) => {
-    if (touches.length < 2)
-      return { x: touches[0].clientX, y: touches[0].clientY };
-    return {
-      x: (touches[0].clientX + touches[1].clientX) / 2,
-      y: (touches[0].clientY + touches[1].clientY) / 2,
-    };
-  }, []);
-
-  // Touch start handler
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      if (!isMobile) return;
-
-      e.preventDefault();
-      const touches = e.touches;
-      touchStateRef.current.isDragging = true;
-      touchStateRef.current.startTransform = { ...transform };
-      setIsGrabbing(true);
-
-      if (touches.length === 2) {
-        // Pinch gesture
-        touchStateRef.current.lastTouchDistance = getTouchDistance(touches);
-        touchStateRef.current.lastTouchCenter = getTouchCenter(touches);
-      } else if (touches.length === 1) {
-        // Single touch for panning
-        touchStateRef.current.lastTouchCenter = {
-          x: touches[0].clientX,
-          y: touches[0].clientY,
-        };
       }
-    },
-    [isMobile, transform, getTouchDistance, getTouchCenter]
-  );
+    })
 
-  // Touch move handler
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (!isMobile || !touchStateRef.current.isDragging) return;
+    const polygonPoints = dataPoints.map((p) => `${p.x},${p.y}`).join(" ")
 
-      e.preventDefault();
-      const touches = e.touches;
-
-      if (touches.length === 2) {
-        // Pinch zoom
-        const currentDistance = getTouchDistance(touches);
-        const currentCenter = getTouchCenter(touches);
-
-        if (touchStateRef.current.lastTouchDistance > 0) {
-          const scaleChange =
-            currentDistance / touchStateRef.current.lastTouchDistance;
-
-          // Set scale bounds relative to initial mobile scale
-          const minScale = isMobile ? mobileScale * 0.5 : 0.5;
-          const maxScale = isMobile ? mobileScale * 3 : 3;
-
-          const newScale = Math.max(
-            minScale,
-            Math.min(
-              maxScale,
-              touchStateRef.current.startTransform.scale * scaleChange
-            )
-          );
-
-          setTransform((prev) => ({
-            ...prev,
-            scale: newScale,
-          }));
-        }
-
-        touchStateRef.current.lastTouchDistance = currentDistance;
-        touchStateRef.current.lastTouchCenter = currentCenter;
-      } else if (touches.length === 1) {
-        // Single touch pan
-        const currentTouch = {
-          x: touches[0].clientX,
-          y: touches[0].clientY,
-        };
-
-        const deltaX = currentTouch.x - touchStateRef.current.lastTouchCenter.x;
-        const deltaY = currentTouch.y - touchStateRef.current.lastTouchCenter.y;
-
-        setTransform((prev) => ({
-          ...prev,
-          x: prev.x + deltaX,
-          y: prev.y + deltaY,
-        }));
-
-        touchStateRef.current.lastTouchCenter = currentTouch;
-      }
-    },
-    [isMobile, getTouchDistance, getTouchCenter]
-  );
-
-  // Touch end handler
-  const handleTouchEnd = useCallback(
-    (e: React.TouchEvent) => {
-      if (!isMobile) return;
-
-      e.preventDefault();
-      touchStateRef.current.isDragging = false;
-      touchStateRef.current.lastTouchDistance = 0;
-      setIsGrabbing(false);
-    },
-    [isMobile]
-  );
-
-  // Mouse handlers for desktop drag (optional enhancement)
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (isMobile) return;
-
-      e.preventDefault();
-      touchStateRef.current.isDragging = true;
-      touchStateRef.current.lastTouchCenter = { x: e.clientX, y: e.clientY };
-      setIsGrabbing(true);
-    },
-    [isMobile]
-  );
-
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      if (isMobile || !touchStateRef.current.isDragging) return;
-
-      e.preventDefault();
-      const deltaX = e.clientX - touchStateRef.current.lastTouchCenter.x;
-      const deltaY = e.clientY - touchStateRef.current.lastTouchCenter.y;
-
-      setTransform((prev) => ({
-        ...prev,
-        x: prev.x + deltaX,
-        y: prev.y + deltaY,
-      }));
-
-      touchStateRef.current.lastTouchCenter = { x: e.clientX, y: e.clientY };
-    },
-    [isMobile]
-  );
-
-  const handleMouseUp = useCallback(
-    (e: React.MouseEvent) => {
-      if (isMobile) return;
-
-      e.preventDefault();
-      touchStateRef.current.isDragging = false;
-      setIsGrabbing(false);
-    },
-    [isMobile]
-  );
-
-  // Reset transform function
-  const resetTransform = useCallback(() => {
-    setTransform({
-      x: 0,
-      y: 0,
-      scale: isMobile ? mobileScale : 1,
-    });
-  }, [isMobile, mobileScale]);
+    return { center, maxRadius, circles, axes, dataPoints, polygonPoints }
+  }, [metrics, size])
 
   return (
-    <div className="relative">
-      {/* Container for draggable/zoomable chart on mobile */}
-      <div
-        ref={containerRef}
-        className={`
-          ${isMobile ? "overflow-hidden touch-none" : ""}
-          ${isGrabbing ? "cursor-grabbing" : isMobile ? "cursor-grab" : ""}
-          w-full flex justify-center items-center
-        `}
-        style={{
-          height: isMobile ? `${mobileViewportHeight}px` : "auto",
-          width: isMobile ? "100%" : "auto",
-          maxWidth: isMobile ? `${mobileViewportWidth}px` : "none",
-          margin: isMobile ? "0 auto" : undefined,
-        }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-      >
-        <svg
-          ref={svgRef}
-          width={size}
-          height={size}
-          className="select-none"
-          viewBox={isMobile ? `0 0 ${size} ${size}` : undefined}
-          style={{
-            transform: isMobile
-              ? `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`
-              : undefined,
-            transformOrigin: "center center",
-            transition: touchStateRef.current.isDragging
-              ? "none"
-              : "transform 0.2s ease-out",
-            width: isMobile ? "100%" : size,
-            height: isMobile ? "100%" : size,
-            maxWidth: isMobile ? `${size}px` : undefined,
-            maxHeight: isMobile ? `${size}px` : undefined,
-          }}
-        >
-          {/* Background circles */}
-          {chartData.circles.map((circle, i) => (
-            <circle
-              key={i}
-              cx={chartData.center}
-              cy={chartData.center}
-              r={circle.radius}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1"
-              className="text-border"
-              opacity={0.3}
-            />
-          ))}
+    <svg width={size} height={size} className="mx-auto">
+      {/* Background circles */}
+      {chartData.circles.map((circle, i) => (
+        <circle
+          key={i}
+          cx={chartData.center}
+          cy={chartData.center}
+          r={circle.radius}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1"
+          className="text-border"
+          opacity={0.3}
+        />
+      ))}
 
-          {/* Axis lines */}
-          {chartData.axes.map((axis, i) => (
-            <g key={i}>
-              <line
-                x1={axis.x1}
-                y1={axis.y1}
-                x2={axis.x2}
-                y2={axis.y2}
-                stroke="currentColor"
-                strokeWidth="1"
-                className="text-border"
-                opacity={0.3}
-              />
-              <text
-                x={axis.labelX}
-                y={axis.labelY}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                className="text-xs fill-muted-foreground font-medium"
-              >
-                {axis.label}
-              </text>
-            </g>
-          ))}
-
-          {/* Data polygon */}
-          <polygon
-            points={chartData.polygonPoints}
-            fill="currentColor"
-            fillOpacity="0.2"
+      {/* Axis lines */}
+      {chartData.axes.map((axis, i) => (
+        <g key={i}>
+          <line
+            x1={axis.x1}
+            y1={axis.y1}
+            x2={axis.x2}
+            y2={axis.y2}
             stroke="currentColor"
-            strokeWidth="2"
-            className="text-primary"
+            strokeWidth="1"
+            className="text-border"
+            opacity={0.3}
           />
-
-          {/* Data points */}
-          {chartData.dataPoints.map((point, i) => (
-            <circle
-              key={i}
-              cx={point.x}
-              cy={point.y}
-              r="4"
-              fill="currentColor"
-              className="text-primary"
-            />
-          ))}
-
-          {/* Center point */}
-          <circle
-            cx={chartData.center}
-            cy={chartData.center}
-            r="3"
-            fill="currentColor"
-            className="text-muted-foreground"
-          />
-        </svg>
-      </div>
-
-      {/* Reset button for mobile */}
-      {isMobile &&
-        (transform.x !== 0 ||
-          transform.y !== 0 ||
-          transform.scale !== (isMobile ? mobileScale : 1)) && (
-          <button
-            onClick={resetTransform}
-            className="absolute top-2 right-2 px-3 py-1 bg-primary text-primary-foreground text-xs rounded-md shadow-lg"
+          <text
+            x={axis.labelX}
+            y={axis.labelY}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            className="text-xs fill-muted-foreground font-medium"
           >
-            Reset View
-          </button>
-        )}
+            {axis.label}
+          </text>
+        </g>
+      ))}
 
-      {/* Instructions for mobile */}
-      {isMobile && (
-        <div className="mt-2 text-center">
-          <p className="text-xs text-muted-foreground">
-            Drag to pan • Pinch to zoom
-          </p>
-        </div>
-      )}
-    </div>
-  );
+      {/* Data polygon */}
+      <polygon
+        points={chartData.polygonPoints}
+        fill="currentColor"
+        fillOpacity="0.2"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="text-primary"
+      />
+
+      {/* Data points */}
+      {chartData.dataPoints.map((point, i) => (
+        <circle key={i} cx={point.x} cy={point.y} r="4" fill="currentColor" className="text-primary" />
+      ))}
+
+      {/* Center point */}
+      <circle cx={chartData.center} cy={chartData.center} r="3" fill="currentColor" className="text-muted-foreground" />
+    </svg>
+  )
 }
