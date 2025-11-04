@@ -115,6 +115,10 @@
 }
 
 @layer base {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ring) var(--background);
+  }
   * {
     @apply border-border outline-ring/50;
   }
