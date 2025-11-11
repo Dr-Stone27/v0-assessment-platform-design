@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress"
 import { useAssessment } from "@/lib/context/assessment-context"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 const LIKERT_SCALE_VALUES = [
   { value: -2, label: "Strongly Disagree" },
@@ -20,7 +21,8 @@ const LIKERT_SCALE_VALUES = [
 export default function QuestionsPage() {
   const router = useRouter()
   const { state, currentQuestion, recordResponse, nextQuestion, previousQuestion, progress } = useAssessment()
-  const [selectedValue, setSelectedValue] = useState<number | null>(null)
+  const [selectedValue, setSelectedValue] = useState<number | null>(null);
+  const isMobile = useIsMobile();
 
   // Redirect if no demographics
   useEffect(() => {
@@ -177,11 +179,11 @@ export default function QuestionsPage() {
 
               {/* Navigation Buttons */}
               <div className="flex justify-between gap-4 pt-4">
-                <Button variant="outline" onClick={handlePrevious} size="lg">
+                <Button variant="outline" onClick={handlePrevious} size={`${isMobile ? 'sm' : 'lg'}`}>
                   <ArrowLeft className="mr-2 w-4 h-4" />
                   Previous
                 </Button>
-                <Button onClick={handleNext} disabled={!canProceed} size="lg">
+                <Button onClick={handleNext} disabled={!canProceed} size={`${isMobile ? 'sm' : 'lg'}`}>
                   {currentQuestion.number === 29 ? "View Results" : "Next"}
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>

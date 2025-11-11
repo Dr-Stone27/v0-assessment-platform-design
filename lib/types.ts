@@ -36,6 +36,8 @@ export interface Archetype {
   name: string
   fitScore: number
   distance: number
+  defining_traits: string
+  core_philosophy: string
 }
 
 export interface CompleteProfile {
