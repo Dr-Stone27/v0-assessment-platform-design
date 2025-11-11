@@ -46,7 +46,8 @@ export function RadarChart({ metrics, size = 400 }: RadarChartProps) {
     lastTouchDistance: 0,
     lastTouchCenter: { x: 0, y: 0 },
     isDragging: false,
-    startTransform: { x: 0, y: 0, scale: 1 },
+    initialScale: 1,
+    lastScale: 1,
   });
 
   const chartData = useMemo(() => {
@@ -134,11 +135,12 @@ export function RadarChart({ metrics, size = 400 }: RadarChartProps) {
       e.preventDefault();
       const touches = e.touches;
       touchStateRef.current.isDragging = true;
-      touchStateRef.current.startTransform = { ...transform };
+      touchStateRef.current.initialScale = transform.scale;
+      touchStateRef.current.lastScale = transform.scale;
       setIsGrabbing(true);
 
       if (touches.length === 2) {
-        // Pinch gesture
+        // Pinch gesture - store initial distance
         touchStateRef.current.lastTouchDistance = getTouchDistance(touches);
         touchStateRef.current.lastTouchCenter = getTouchCenter(touches);
       } else if (touches.length === 1) {
@@ -149,7 +151,7 @@ export function RadarChart({ metrics, size = 400 }: RadarChartProps) {
         };
       }
     },
-    [isMobile, transform, getTouchDistance, getTouchCenter]
+    [isMobile, transform.scale, getTouchDistance, getTouchCenter]
   );
 
   // Touch move handler
@@ -161,32 +163,43 @@ export function RadarChart({ metrics, size = 400 }: RadarChartProps) {
       const touches = e.touches;
 
       if (touches.length === 2) {
-        // Pinch zoom
+        // Pinch zoom - improved implementation
         const currentDistance = getTouchDistance(touches);
         const currentCenter = getTouchCenter(touches);
 
-        if (touchStateRef.current.lastTouchDistance > 0) {
-          const scaleChange =
+        if (
+          touchStateRef.current.lastTouchDistance > 0 &&
+          currentDistance > 0
+        ) {
+          // Calculate incremental scale change based on current distance vs last distance
+          const distanceRatio =
             currentDistance / touchStateRef.current.lastTouchDistance;
 
-          // Set scale bounds relative to initial mobile scale
-          const minScale = isMobile ? mobileScale * 0.5 : 0.5;
-          const maxScale = isMobile ? mobileScale * 3 : 3;
+          // Add threshold to prevent micro-jitters
+          if (Math.abs(distanceRatio - 1) > 0.01) {
+            // Apply incremental scaling to current scale
+            const newScale = touchStateRef.current.lastScale * distanceRatio;
 
-          const newScale = Math.max(
-            minScale,
-            Math.min(
-              maxScale,
-              touchStateRef.current.startTransform.scale * scaleChange
-            )
-          );
+            // Set scale bounds relative to initial mobile scale
+            const minScale = isMobile ? mobileScale * 0.3 : 0.3;
+            const maxScale = isMobile ? mobileScale * 4 : 4;
 
-          setTransform((prev) => ({
-            ...prev,
-            scale: newScale,
-          }));
+            const clampedScale = Math.max(
+              minScale,
+              Math.min(maxScale, newScale)
+            );
+
+            setTransform((prev) => ({
+              ...prev,
+              scale: clampedScale,
+            }));
+
+            // Update last scale for next calculation
+            touchStateRef.current.lastScale = clampedScale;
+          }
         }
 
+        // Always update touch tracking for next frame
         touchStateRef.current.lastTouchDistance = currentDistance;
         touchStateRef.current.lastTouchCenter = currentCenter;
       } else if (touches.length === 1) {
@@ -208,7 +221,7 @@ export function RadarChart({ metrics, size = 400 }: RadarChartProps) {
         touchStateRef.current.lastTouchCenter = currentTouch;
       }
     },
-    [isMobile, getTouchDistance, getTouchCenter]
+    [isMobile, mobileScale, getTouchDistance, getTouchCenter]
   );
 
   // Touch end handler
@@ -217,11 +230,23 @@ export function RadarChart({ metrics, size = 400 }: RadarChartProps) {
       if (!isMobile) return;
 
       e.preventDefault();
+
+      // If transitioning from 2 fingers to 1 finger, update the last scale for smooth continuation
+      if (e.touches.length === 1) {
+        touchStateRef.current.lastScale = transform.scale;
+        touchStateRef.current.lastTouchCenter = {
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
+        };
+        return; // Continue dragging with single finger
+      }
+
+      // Complete gesture end
       touchStateRef.current.isDragging = false;
       touchStateRef.current.lastTouchDistance = 0;
       setIsGrabbing(false);
     },
-    [isMobile]
+    [isMobile, transform.scale]
   );
 
   // Mouse handlers for desktop drag (optional enhancement)

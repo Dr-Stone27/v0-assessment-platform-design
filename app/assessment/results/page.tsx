@@ -220,7 +220,7 @@ export default function ResultsPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between">
+              <div className="sm:flex justify-between items-center">
                 <div className="basis-[65%]">
                   <p className="text-2xl font-bold capitalize">
                     {profile.layer2_mindset.type} Mindset
@@ -237,7 +237,20 @@ export default function ResultsPage() {
                       ? "default"
                       : "secondary"
                   }
-                  className="text-base px-4 py-2"
+                  className="text-base px-4 py-2 max-sm:hidden mt-2"
+                >
+                  Score: {profile.layer2_mindset.score > 0 ? "+" : ""}
+                  {profile.layer2_mindset.score}
+                </Badge>
+              </div>
+              <div className="flex justify-end">
+                <Badge
+                  variant={
+                    profile.layer2_mindset.type === "growth"
+                      ? "default"
+                      : "secondary"
+                  }
+                  className="text-base px-4 py-2 sm:hidden mt-2"
                 >
                   Score: {profile.layer2_mindset.score > 0 ? "+" : ""}
                   {profile.layer2_mindset.score}
