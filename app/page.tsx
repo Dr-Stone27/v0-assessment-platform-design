@@ -1,9 +1,28 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Brain, BarChart3, Target, Users, BookOpen } from "lucide-react"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Brain,
+  BarChart3,
+  Target,
+  Users,
+  BookOpen,
+  LogIn,
+  UserPlus,
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <div className="container mx-auto px-4 py-16">
@@ -13,11 +32,32 @@ export default function HomePage() {
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
               <Brain className="w-10 h-10 text-primary" />
             </div>
-            <h1 className="text-5xl font-bold tracking-tight text-balance">Discover Your Learning Archetype</h1>
+            <h1 className="text-5xl font-bold tracking-tight text-balance">
+              Discover Your Learning Archetype
+            </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
-              Take our research-backed assessment to understand your unique learning style and unlock personalized
-              strategies for academic success.
+              Take our research-backed assessment to understand your unique
+              learning style and unlock personalized strategies for academic
+              success.
             </p>
+
+            {/* Auth buttons if not signed in */}
+            {!user && (
+              <div className="flex items-center justify-center gap-4 pt-4">
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/auth/signin">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Sign In
+                  </Link>
+                </Button>
+                <Button asChild size="lg">
+                  <Link href="/auth/signup">
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Sign Up
+                  </Link>
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Features Grid */}
@@ -29,7 +69,8 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Comprehensive analysis across planning, processing, execution, and engagement dimensions.
+                  Comprehensive analysis across planning, processing, execution,
+                  and engagement dimensions.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -41,7 +82,8 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Discover if you're an Organizer, Deep Diver, Collaborator, Adaptive Learner, or Reflective Thinker.
+                  Discover if you're an Organizer, Deep Diver, Collaborator,
+                  Adaptive Learner, or Reflective Thinker.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -53,7 +95,8 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Receive tailored recommendations based on your strengths and areas for development.
+                  Receive tailored recommendations based on your strengths and
+                  areas for development.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -64,13 +107,20 @@ export default function HomePage() {
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">Ready to Begin?</CardTitle>
               <CardDescription className="text-base">
-                The assessment takes approximately 10-15 minutes to complete. Answer honestly for the most accurate
-                results.
+                The assessment takes approximately 10-15 minutes to complete.
+                Answer honestly for the most accurate results.
+                {!user && (
+                  <span className="block mt-2 text-primary">
+                    Sign up to save your results and receive them via email!
+                  </span>
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex justify-center">
               <Button asChild size="lg" className="text-lg px-8">
-                <Link href="/assessment/demographics">Start Assessment</Link>
+                <Link href={user ? "/assessment/demographics" : "/auth/signup"}>
+                  {user ? "Start Assessment" : "Sign Up to Start"}
+                </Link>
               </Button>
             </CardContent>
           </Card>
@@ -82,11 +132,17 @@ export default function HomePage() {
               </div>
               <CardTitle className="text-2xl">Learning Resources</CardTitle>
               <CardDescription className="text-base">
-                Explore tools, techniques, and archetype breakdowns to support your learning journey.
+                Explore tools, techniques, and archetype breakdowns to support
+                your learning journey.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex justify-center">
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 bg-transparent">
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="text-lg px-8 bg-transparent"
+              >
                 <Link href="/resources">Browse Resources</Link>
               </Button>
             </CardContent>
@@ -94,11 +150,17 @@ export default function HomePage() {
 
           {/* Info Section */}
           <div className="text-center text-sm text-muted-foreground space-y-2">
-            <p>Your responses are stored locally and never shared without your consent.</p>
-            <p>This assessment is designed for university students and based on educational research.</p>
+            <p>
+              Your responses are stored locally and never shared without your
+              consent.
+            </p>
+            <p>
+              This assessment is designed for university students and based on
+              educational research.
+            </p>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -27,6 +27,8 @@ import {
   Lightbulb,
   FileText,
   BookOpen,
+  Mail,
+  CheckCircle2,
 } from "lucide-react";
 import type { CompleteProfile, PersonalizedReport } from "@/lib/types";
 import Link from "next/link";
@@ -38,6 +40,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { saveAssessmentResultToDatabase } from "@/lib/supabase/assessment-results";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ResultsPage() {
   const router = useRouter();
@@ -49,7 +53,13 @@ export default function ResultsPage() {
   const [isLoadingReport, setIsLoadingReport] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("report");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const isMobile = useIsMobile();
+  const supabase = createClient();
 
   useEffect(() => {
     // Redirect if no demographics or incomplete responses
@@ -122,6 +132,81 @@ export default function ResultsPage() {
 
     fetchPersonalizedReport();
   }, [profile, state.demographics]);
+
+  // Save assessment results to database when profile and report are ready
+  useEffect(() => {
+    async function saveResults() {
+      if (!profile || !state.demographics || isSaving) return;
+
+      // Check if user is authenticated
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return; // Skip saving if not authenticated
+
+      setIsSaving(true);
+      setSaveError(null);
+
+      try {
+        await saveAssessmentResultToDatabase({
+          profile,
+          demographics: state.demographics,
+          responses: state.responses,
+          personalizedReport,
+        });
+        console.log("Assessment results saved successfully");
+      } catch (error) {
+        console.error("Error saving assessment results:", error);
+        setSaveError(
+          "Failed to save your results. Your results are still available locally."
+        );
+      } finally {
+        setIsSaving(false);
+      }
+    }
+
+    // Only save after personalized report is loaded or if it fails
+    if (personalizedReport || reportError) {
+      saveResults();
+    }
+  }, [
+    profile,
+    state.demographics,
+    state.responses,
+    personalizedReport,
+    reportError,
+    isSaving,
+    supabase,
+  ]);
+
+  const handleSendEmail = async () => {
+    if (!profile) return;
+
+    setIsSendingEmail(true);
+    setEmailError(null);
+
+    try {
+      const response = await fetch("/api/send-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: profile.sessionId,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to send email");
+      }
+
+      setEmailSent(true);
+    } catch (error: any) {
+      console.error("Error sending email:", error);
+      setEmailError(error.message || "Failed to send email. Please try again.");
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
 
   const handleReset = () => {
     if (
