@@ -114,6 +114,17 @@ export default function ResultsPage() {
           }),
         });
 
+        // Send results to admin for personalized recommendations
+        await fetch("/api/send-report-admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-admin-secret": process.env.NEXT_PUBLIC_ADMIN_SEND_SECRET || "" },
+          body: JSON.stringify({
+            profile,
+            sessionId: profile.sessionId,
+            demographics: state.demographics,
+          }),
+        });
+
         if (!response.ok) {
           throw new Error("Failed to generate report");
         }

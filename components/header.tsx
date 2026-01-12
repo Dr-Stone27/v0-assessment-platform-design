@@ -11,7 +11,8 @@ export async function Header() {
   } = await supabase.auth.getUser();
 
   return (
-    <header className="border-b">
+    // fixed top-0 left-0 right-0 z-50
+    <header className="border-b  bg-background">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-semibold">
           <Brain className="h-6 w-6 text-primary" />
