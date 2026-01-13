@@ -66,7 +66,6 @@ export function calculateCompleteProfile(responses: QuestionResponse[], demograp
     sessionId: demographics.sessionId,
     userId: demographics.userId,
     demographics: {
-      sessionId: demographics.sessionId,
       faculty: demographics.faculty,
       yearOfStudy: demographics.yearOfStudy,
       courseLoad: demographics.courseLoad,
@@ -152,8 +151,8 @@ function normalizeScores(rawScores: Record<string, RawDimensionScore>): Record<s
 
 function calculateMindset(responses: QuestionResponse[]): Mindset {
   // Questions 27, 28, 29 ONLY
-  let totalScore = 0;
-  [27, 28, 29].forEach((questionNum) => {
+  let totalScore = 0
+  ;[27, 28, 29].forEach((questionNum) => {
     const response = responses.find((r) => r.questionId === `q${questionNum}`)
     if (response) {
       totalScore += response.value // Already -2 to +2
