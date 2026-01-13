@@ -299,8 +299,7 @@ export function RadarChart({ metrics, size = 400 }: RadarChartProps) {
       y: 0,
       scale: isMobile ? mobileScale : 1,
     });
-  }, [isMobile, mobileScale]);  // Build your own slider component
-  // Learn: value mapping, constraints, accessibility
+  }, [isMobile, mobileScale]);
 
   return (
     <div className="relative">
